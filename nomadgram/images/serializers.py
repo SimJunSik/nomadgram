@@ -1,12 +1,49 @@
 from rest_framework import serializers
 from . import models
+from nomadgram.users import models as user_models
+from taggit_serializer.serializers import (TagListSerializerField, TaggitSerializer)
 
+
+class SmallImageSerializer(serializers.ModelSerializer) :
+
+    class Meta :
+        model = models.Image
+        fields = (
+            'file',
+        )
+
+
+class CountImageSerializer(serializers.ModelSerializer) :
+
+    class Meta :
+        model = models.Image
+        fields = (
+            'id',
+            'file',
+            'comment_count',
+            'like_count',
+        )
+
+class FeedUserSerializers(serializers.ModelSerializer) :
+
+    class Meta :
+        model = user_models.User
+        fields = (
+            'username',
+            'profile_image',
+        )
 
 class CommentSerializers(serializers.ModelSerializer) :
 
+    creator = FeedUserSerializers(read_only=True)
+
     class Meta :
         model = models.Comment
-        fields = '__all__'
+        fields = (
+            'id',
+            'message',
+            'creator'
+        )
 
 
 class LikeSerializers(serializers.ModelSerializer) :
@@ -15,11 +52,13 @@ class LikeSerializers(serializers.ModelSerializer) :
         model = models.Like
         fields = '__all__'
 
-class ImageSerializers(serializers.ModelSerializer) :
+
+class ImageSerializers(TaggitSerializer, serializers.ModelSerializer) :
 
     comments = CommentSerializers(many=True)
-    likes = LikeSerializers(many=True)
-    
+    creator = FeedUserSerializers()
+    tags = TagListSerializerField()
+
     class Meta :
         model = models.Image
         fields = (
@@ -28,5 +67,23 @@ class ImageSerializers(serializers.ModelSerializer) :
             'location',
             'caption',
             'comments',
-            'likes',
+            'like_count',
+            'creator',
+            'tags',
+            'created_at',
+        )
+
+
+
+
+class InputImageSerializer(serializers.ModelSerializer) :
+
+    #file = serializers.FileField(required=False)
+
+    class Meta :
+        model = models.Image
+        fields = (
+            'file',
+            'location',
+            'caption',
         )
